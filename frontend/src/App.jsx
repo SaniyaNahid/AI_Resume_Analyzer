@@ -8,6 +8,7 @@ import LoadingState from "./components/LoadingState";
 import ErrorAlert from "./components/ErrorAlert";
 import AnalysisResult from "./components/AnalysisResult";
 import Footer from "./components/Footer";
+import ScoreGauge from "./components/ScoreGauge";
 
 function App() {
   const [file, setFile] = useState(null);
