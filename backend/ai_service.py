@@ -1,15 +1,16 @@
-import google.generativeai as genai
 import os
 
 from dotenv import load_dotenv
+from google import genai
 
 load_dotenv()
 
 API_KEY = os.getenv("GEMINI_API_KEY")
 
-genai.configure(api_key=API_KEY)
+client = genai.Client(api_key=API_KEY)
 
-model = genai.GenerativeModel("gemini-3.5-flash")
+MODEL_NAME = "gemini-3.5-flash"
+
 
 def analyze_resume(text):
 
@@ -29,6 +30,9 @@ def analyze_resume(text):
     4. Improvement Suggestions
     """
 
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model=MODEL_NAME,
+        contents=prompt,
+    )
 
     return response.text
