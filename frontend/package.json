@@ -6,10 +6,10 @@
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",
-    "vite": "latest",
+    "axios": "latest",
+    "framer-motion": "^12.43.0",
     "react": "latest",
     "react-dom": "latest",
-    "axios": "latest"
-  },
-  "devDependencies": {}
+    "vite": "latest"
+  }
 }

@@ -1,6 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence } from "framer-motion";
 
 import { analyzeResume } from "./api";
+import Hero from "./components/Hero";
+import UploadCard from "./components/UploadCard";
+import LoadingState from "./components/LoadingState";
+import ErrorAlert from "./components/ErrorAlert";
+import AnalysisResult from "./components/AnalysisResult";
+import Footer from "./components/Footer";
 
 function App() {
   const [file, setFile] = useState(null);
@@ -8,15 +15,22 @@ function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const handleFileChange = (event) => {
-    const selectedFile = event.target.files[0];
+  const resultsRef = useRef(null);
 
+  // Scroll to results automatically once analysis succeeds.
+  useEffect(() => {
+    if (result && resultsRef.current) {
+      resultsRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [result]);
+
+  const handleFileSelected = (selectedFile) => {
     setFile(selectedFile || null);
     setResult("");
     setError("");
   };
 
-  const handleUpload = async () => {
+  const handleAnalyze = async () => {
     if (!file) {
       setError("Please choose a PDF resume before analyzing.");
       return;
@@ -44,90 +58,42 @@ function App() {
     }
   };
 
+  const handleReset = () => {
+    setFile(null);
+    setResult("");
+    setError("");
+  };
+
   return (
     <main className="app-shell">
-      <section className="hero-section">
-        <div className="hero-copy">
-          <p className="eyebrow">AI Resume Analyzer</p>
-          <h1>Review your resume with clear, recruiter-style feedback.</h1>
-          <p className="hero-text">
-            Upload a PDF resume and get a structured review with skills, gaps,
-            ATS score, and improvement suggestions.
-          </p>
-        </div>
-
-        <div className="stats-strip" aria-label="Resume analysis highlights">
-          <div>
-            <strong>ATS</strong>
-            <span>Score</span>
-          </div>
-          <div>
-            <strong>Skills</strong>
-            <span>Extracted</span>
-          </div>
-          <div>
-            <strong>Gaps</strong>
-            <span>Found</span>
-          </div>
-        </div>
-      </section>
+      <Hero />
 
       <section className="workspace">
-        <div className="upload-panel">
-          <div className="panel-header">
-            <span className="step-badge">01</span>
-            <div>
-              <h2>Upload Resume</h2>
-              <p>PDF files only. Keep it under your API quota limit.</p>
-            </div>
-          </div>
+        <UploadCard
+          file={file}
+          loading={loading}
+          hasResult={Boolean(result)}
+          onFileSelected={handleFileSelected}
+          onAnalyze={handleAnalyze}
+          onReset={handleReset}
+        />
 
-          <label className="drop-zone">
-            <input type="file" accept=".pdf" onChange={handleFileChange} />
-            <span className="upload-icon">PDF</span>
-            <strong>{file ? file.name : "Choose your resume PDF"}</strong>
-            <small>
-              {file
-                ? `${(file.size / 1024 / 1024).toFixed(2)} MB selected`
-                : "Click here to browse from your computer"}
-            </small>
-          </label>
-
-          {error && <p className="error-message">{error}</p>}
-
-          <button className="primary-button" onClick={handleUpload} disabled={loading}>
-            {loading ? "Analyzing..." : "Analyze Resume"}
-          </button>
-        </div>
-
-        <div className="result-panel">
-          <div className="panel-header">
-            <span className="step-badge">02</span>
-            <div>
-              <h2>Analysis Result</h2>
-              <p>Your feedback will appear here after processing.</p>
-            </div>
-          </div>
-
-          <div className={result ? "result-box has-result" : "result-box"}>
-            {loading && (
-              <div className="loading-state">
-                <span className="spinner" />
-                <p>Reading resume and preparing feedback...</p>
-              </div>
-            )}
-
-            {!loading && result && <pre>{result}</pre>}
-
-            {!loading && !result && (
-              <div className="empty-state">
+        <div className="results-panel" ref={resultsRef}>
+          <AnimatePresence mode="wait">
+            {error && <ErrorAlert key="error" message={error} onRetry={handleAnalyze} />}
+            {loading && <LoadingState key="loading" />}
+            {!loading && result && <AnalysisResult key="result" raw={result} />}
+            {!loading && !error && !result && (
+              <div className="empty-state" key="empty">
                 <h3>No analysis yet</h3>
-                <p>Upload a resume and run the analyzer to see insights.</p>
+                <p>Upload a resume and run the analyzer to see your results here.</p>
               </div>
             )}
-          </div>
+          </AnimatePresence>
         </div>
       </section>
+
+      <Footer />
     </main>
   );
 }
